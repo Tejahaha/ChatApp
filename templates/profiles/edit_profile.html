@@ -105,6 +105,11 @@
                 <div class="settings-section-desc">Update your display name, bio, and status.</div>
             </div>
             <div class="settings-section-body">
+                <div class="field-group">
+                    <label class="field-label">Username</label>
+                    <input type="text" name="username" class="field-input"
+                           value="{{ form.username.value|default:'' }}" placeholder="Username" maxlength="150" required>
+                </div>
                 <div class="field-row">
                     <div class="field-group">
                         <label class="field-label">First Name</label>
@@ -171,7 +176,7 @@
                     <h4>Change Password</h4>
                     <p>Update your login password.</p>
                 </div>
-                <a href="{% url 'change_password' %}" class="btn-danger">Change Password</a>
+                <a href="{% url 'password_change' %}" class="btn-danger">Change Password</a>
             </div>
         </div>
     </div>

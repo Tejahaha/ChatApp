@@ -33,9 +33,9 @@ def edit_profile(request):
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
-            form.save()
+            updated = form.save()
             messages.success(request, "Profile updated successfully.")
-            return redirect('profile_view', username=request.user.username)
+            return redirect('profile_view', username=updated.username)
     else:
         form = ProfileUpdateForm(instance=request.user)
     return render(request, 'profiles/edit_profile.html', {'form': form})
