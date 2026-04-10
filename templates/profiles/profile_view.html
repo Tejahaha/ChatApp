@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile_user.username }}'s Profile - ChatApp{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="glass-card p-5 text-center">
+            <img src="{{ profile_user.profile_image.url }}" alt="profile" class="rounded-circle mb-4 shadow-sm" width="180" height="180" style="object-fit: cover; border: 5px solid white;">
+            
+            <h2 class="fw-bold mb-1">{{ profile_user.get_full_name|default:profile_user.username }}</h2>
+            <p class="text-muted">@{{ profile_user.username }}</p>
+            
+            <div class="d-flex justify-content-center gap-2 mb-4">
+                <span class="badge rounded-pill bg-{{ profile_user.is_online|yesno:'success,secondary' }} px-3 py-2">
+                    <i class="bi bi-circle-fill me-1 small"></i> {{ profile_user.is_online|yesno:'Online,Offline' }}
+                </span>
+                {% if profile_user.last_seen and not profile_user.is_online %}
+                <span class="badge rounded-pill bg-light text-dark px-3 py-2 border">
+                    Last seen: {{ profile_user.last_seen|timesince }} ago
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="bg-light rounded-4 p-4 mb-4 text-start">
+                <h6 class="fw-bold text-primary small text-uppercase ls-wide mb-2">About</h6>
+                <p class="mb-3">{{ profile_user.bio|default:"No bio yet." }}</p>
+                
+                <h6 class="fw-bold text-primary small text-uppercase ls-wide mb-2">Status</h6>
+                <p class="mb-0">"{{ profile_user.status_message|default:"Available" }}"</p>
+            </div>
+
+            <div class="d-grid gap-2">
+                {% if profile_user == user %}
+                    <a href="{% url 'edit_profile' %}" class="btn btn-outline-primary rounded-pill py-2">
+                        <i class="bi bi-pencil-square me-2"></i> Edit My Profile
+                    </a>
+                {% else %}
+                    <a href="{% url 'private_chat' profile_user.id %}" class="btn btn-primary rounded-pill py-2 fw-bold">
+                        <i class="bi bi-chat-fill me-2"></i> Message
+                    </a>
+                    {% if not is_blocked %}
+                        <a href="{% url 'block_user' profile_user.id %}" class="btn btn-link text-danger text-decoration-none small">Block User</a>
+                    {% else %}
+                        <span class="text-muted small">You have blocked this user</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

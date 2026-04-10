@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}User Dashboard - ChatApp{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="glass-card p-4 text-center">
+            <img src="{{ user.profile_image.url }}" alt="profile" class="rounded-circle mb-3 shadow-sm" width="120" height="120">
+            <h3>{{ user.username }}</h3>
+            <p class="text-muted small">{{ user.bio|default:"No bio added yet." }}</p>
+            <span class="badge bg-{{ user.is_online|yesno:'success,secondary' }} rounded-pill mb-3">
+                {{ user.is_online|yesno:'Online,Offline' }}
+            </span>
+            <div class="d-grid">
+                <a href="{% url 'edit_profile' %}" class="btn btn-outline-primary btn-sm rounded-pill">Edit Profile</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="glass-card p-3 text-center border-primary">
+                    <h4 class="fw-bold text-primary">{{ active_chats_count }}</h4>
+                    <p class="text-muted mb-0 small">Conversations</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-card p-4 text-center">
+                    <h2 class="fw-bold text-success">{{ groups_joined }}</h2>
+                    <p class="text-muted mb-0">Groups Joined</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-card p-4 text-center">
+                    <h2 class="fw-bold text-info">{{ total_messages_sent }}</h2>
+                    <p class="text-muted mb-0">Messages Sent</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-card p-4 text-center">
+                    <h2 class="fw-bold text-danger">{{ unread_messages }}</h2>
+                    <p class="text-muted mb-0">Unread</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="glass-card p-4">
+            <h5 class="fw-bold mb-4">Quick Actions</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <a href="{% url 'chat_list' %}" class="card text-decoration-none border-0 bg-light p-3 rounded-4 transition-transform h-100 d-flex flex-column align-items-center justify-content-center">
+                        <i class="bi bi-chat-text fs-1 text-primary mb-2"></i>
+                        <span class="fw-semibold">Start a Chat</span>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'create_group' %}" class="card text-decoration-none border-0 bg-light p-3 rounded-4 transition-transform h-100 d-flex flex-column align-items-center justify-content-center">
+                        <i class="bi bi-people fs-1 text-success mb-2"></i>
+                        <span class="fw-semibold">Create Group</span>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'search_users' %}" class="card text-decoration-none border-0 bg-light p-3 rounded-4 transition-transform h-100 d-flex flex-column align-items-center justify-content-center">
+                        <i class="bi bi-person-plus fs-1 text-info mb-2"></i>
+                        <span class="fw-semibold">Discover Users</span>
+                    </a>
+                </div>
+            </div>
+        <div class="glass-card p-4 mt-4">
+            <h5 class="fw-bold mb-4">Activity Insights</h5>
+            <div class="text-center">
+                <img src="data:image/png;base64,{{ chart_uri }}" class="img-fluid rounded-4 shadow-sm" alt="Activity Chart">
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition-transform {
+        transition: transform 0.2s;
+    }
+    .transition-transform:hover {
+        transform: translateY(-5px);
+        background-color: #f1f3f5 !important;
+    }
+</style>
+{% endblock %}

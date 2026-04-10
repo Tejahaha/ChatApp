@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Users - ChatApp{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="glass-card p-4">
+            <h4 class="fw-bold mb-4">Find People</h4>
+            <form method="GET" class="mb-4">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control rounded-pill-start px-4" placeholder="Search by username or name..." value="{{ query|default:'' }}">
+                    <button class="btn btn-primary rounded-pill-end px-4" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+
+            <div class="row g-3">
+                {% for profile_user in users %}
+                <div class="col-12">
+                    <div class="card border-0 bg-light rounded-4 p-3 d-flex flex-row align-items-center">
+                        <img src="{{ profile_user.profile_image.url }}" alt="user" class="rounded-circle me-3" width="55" height="55">
+                        <div class="flex-grow-1">
+                            <h6 class="fw-bold mb-0">{{ profile_user.get_full_name|default:profile_user.username }}</h6>
+                            <small class="text-muted text-lowercase">@{{ profile_user.username }}</small>
+                            <p class="mb-0 small text-truncate" style="max-width: 200px;">{{ profile_user.status_message|default:"Available" }}</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'private_chat' profile_user.id %}" class="btn btn-primary btn-sm rounded-pill px-3">Message</a>
+                            <a href="{% url 'profile_view' profile_user.username %}" class="btn btn-light btn-sm rounded-circle"><i class="bi bi-person"></i></a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                {% if query %}
+                <div class="text-center py-4">
+                    <p class="text-muted">No users found for "{{ query }}".</p>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

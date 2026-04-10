@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}Groups — ChatApp{% endblock %}
+
+{% block extra_css %}
+<style>
+.groups-page { max-width: 700px; margin: 0 auto; padding-bottom: 48px; }
+
+.groups-top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0 20px; gap: 12px; flex-wrap: wrap;
+}
+.groups-title { font-size: 22px; font-weight: 700; color: var(--text1); margin: 0; }
+.top-actions { display: flex; align-items: center; gap: 10px; }
+
+.btn-action {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: none; border-radius: 10px;
+    padding: 9px 16px; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: background 150ms, transform 100ms; font-family: inherit;
+}
+.btn-action.primary { background: var(--accent); color: #fff; }
+.btn-action.primary:hover { background: var(--accent-hover); color: #fff; transform: translateY(-1px); }
+.btn-action.outline {
+    background: var(--bg-hover); color: var(--text1);
+    border: 1.5px solid var(--border2);
+}
+.btn-action.outline:hover { background: var(--bg-active); color: var(--text1); }
+
+/* Join modal */
+.join-modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
+    z-index: 999; align-items: center; justify-content: center;
+}
+.join-modal-overlay.open { display: flex; }
+.join-card {
+    background: var(--bg-elevated); border: 1px solid var(--border2);
+    border-radius: 18px; padding: 30px 28px; width: 100%; max-width: 400px;
+    margin: 16px; box-shadow: var(--shadow-lg);
+}
+.join-card h3 { font-size: 18px; font-weight: 700; color: var(--text1); margin-bottom: 6px; }
+.join-card p  { font-size: 13px; color: var(--text3); margin-bottom: 20px; }
+.code-input {
+    width: 100%; background: var(--bg-hover); border: 1.5px solid var(--border2);
+    border-radius: 10px; padding: 13px 16px;
+    font-size: 22px; font-weight: 800; letter-spacing: 8px;
+    text-align: center; color: var(--text1); outline: none;
+    font-family: monospace; text-transform: uppercase;
+    transition: border-color 150ms, box-shadow 150ms;
+    margin-bottom: 16px;
+}
+.code-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.join-btn {
+    width: 100%; padding: 11px; background: var(--accent); color: #fff;
+    font-size: 14px; font-weight: 700; border: none; border-radius: 10px;
+    cursor: pointer; font-family: inherit; transition: background 150ms;
+}
+.join-btn:hover { background: var(--accent-hover); }
+.cancel-link {
+    display: block; text-align: center; margin-top: 12px;
+    font-size: 13px; color: var(--text3); cursor: pointer; text-decoration: none;
+}
+.cancel-link:hover { color: var(--text2); }
+
+/* Section */
+.section-head {
+    display: flex; align-items: center; gap: 10px;
+    margin: 28px 0 12px;
+}
+.section-label {
+    font-size: 12px; font-weight: 700; color: var(--text3);
+    text-transform: uppercase; letter-spacing: .8px; white-space: nowrap;
+}
+.section-line { flex: 1; height: 1px; background: var(--border); }
+
+/* Group cards */
+.group-grid { display: flex; flex-direction: column; gap: 6px; }
+
+.group-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 16px; border-radius: 14px;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    text-decoration: none; color: inherit;
+    transition: background 140ms, box-shadow 140ms;
+}
+.group-card:hover { background: var(--bg-hover); box-shadow: var(--shadow-sm); color: inherit; }
+
+.group-avatar {
+    width: 46px; height: 46px; border-radius: 13px;
+    object-fit: cover; flex-shrink: 0;
+}
+.group-info { flex: 1; min-width: 0; }
+.group-name-row { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; flex-wrap: wrap; }
+.group-name { font-size: 14.5px; font-weight: 700; color: var(--text1); }
+
+.badge-private {
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    background: var(--accent-dim2); color: var(--accent-light);
+    border-radius: 20px; border: 1px solid var(--border2); white-space: nowrap;
+}
+.badge-public {
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    background: rgba(63,185,80,.14); color: #3fb950;
+    border-radius: 20px; border: 1px solid rgba(63,185,80,.25); white-space: nowrap;
+}
+.badge-admin {
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    background: rgba(251,188,5,.14); color: #e6a817;
+    border-radius: 20px; border: 1px solid rgba(251,188,5,.25); white-space: nowrap;
+}
+.group-meta { font-size: 12.5px; color: var(--text3); }
+
+.join-card-btn {
+    padding: 7px 14px; font-size: 12.5px; font-weight: 600;
+    background: var(--accent-dim); color: var(--accent-light);
+    border: 1px solid var(--border2); border-radius: 8px;
+    cursor: pointer; text-decoration: none; white-space: nowrap;
+    transition: background 140ms; flex-shrink: 0; font-family: inherit;
+}
+.join-card-btn:hover { background: var(--accent-dim2); color: var(--accent-light); }
+
+.code-chip {
+    font-family: monospace; font-size: 13px; font-weight: 700;
+    letter-spacing: 4px; color: var(--accent-light);
+    background: var(--accent-dim); border-radius: 7px;
+    padding: 3px 10px; cursor: pointer; flex-shrink: 0;
+    border: 1px solid var(--border2);
+    transition: background 140ms;
+}
+.code-chip:hover { background: var(--accent-dim2); }
+
+.empty-mini {
+    padding: 30px 16px; text-align: center;
+    color: var(--text3); font-size: 13.5px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Join private group modal -->
+<div class="join-modal-overlay" id="joinModal">
+    <div class="join-card">
+        <h3>Join a Private Group</h3>
+        <p>Enter the 8-character access code shared by the group admin.</p>
+        <form method="POST" action="{% url 'join_private_group' %}">
+            {% csrf_token %}
+            <input type="text" name="code" class="code-input" maxlength="8"
+                   placeholder="XXXXXXXX" autocomplete="off"
+                   oninput="this.value=this.value.toUpperCase()">
+            <button type="submit" class="join-btn">Join Group</button>
+        </form>
+        <span class="cancel-link" onclick="document.getElementById('joinModal').classList.remove('open')">Cancel</span>
+    </div>
+</div>
+
+<div class="groups-page">
+    <div class="groups-top">
+        <h1 class="groups-title">Groups</h1>
+        <div class="top-actions">
+            <button class="btn-action outline" onclick="document.getElementById('joinModal').classList.add('open')">
+                <i class="bi bi-key"></i> Join with Code
+            </button>
+            <a href="{% url 'create_group' %}" class="btn-action primary">
+                <i class="bi bi-plus-lg"></i> New Group
+            </a>
+        </div>
+    </div>
+
+    <!-- My Groups -->
+    <div class="section-head">
+        <span class="section-label">My Groups ({{ my_groups.count }})</span>
+        <div class="section-line"></div>
+    </div>
+
+    {% if my_groups %}
+    <div class="group-grid">
+        {% for group in my_groups %}
+        <a href="{% url 'group_chat' group.id %}" class="group-card">
+            <img src="{{ group.image.url }}" alt="{{ group.name }}" class="group-avatar">
+            <div class="group-info">
+                <div class="group-name-row">
+                    <span class="group-name">{{ group.name }}</span>
+                    {% if group.is_private %}
+                    <span class="badge-private">🔒 Private</span>
+                    {% else %}
+                    <span class="badge-public">🌐 Public</span>
+                    {% endif %}
+                    {% if group.admin == user %}
+                    <span class="badge-admin">★ Admin</span>
+                    {% endif %}
+                </div>
+                <div class="group-meta">
+                    {{ group.members.count }} member{{ group.members.count|pluralize }}{% if group.description %} · {{ group.description|truncatechars:50 }}{% endif %}
+                </div>
+            </div>
+            {% if group.admin == user and group.is_private %}
+            <span class="code-chip" title="Click to copy"
+                  onclick="event.preventDefault();navigator.clipboard.writeText('{{ group.access_code }}');this.textContent='Copied!';setTimeout(()=>this.textContent='{{ group.access_code }}',1500);">
+                {{ group.access_code }}
+            </span>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-mini">You haven't joined any groups yet. Create one or join with a code!</div>
+    {% endif %}
+
+    <!-- Discover Public Groups -->
+    <div class="section-head">
+        <span class="section-label">Discover Public Groups</span>
+        <div class="section-line"></div>
+    </div>
+
+    {% if discover_groups %}
+    <div class="group-grid">
+        {% for group in discover_groups %}
+        <div class="group-card" style="cursor:default;">
+            <img src="{{ group.image.url }}" alt="{{ group.name }}" class="group-avatar">
+            <div class="group-info">
+                <div class="group-name-row">
+                    <span class="group-name">{{ group.name }}</span>
+                    <span class="badge-public">🌐 Public</span>
+                </div>
+                <div class="group-meta">
+                    {{ group.members.count }} member{{ group.members.count|pluralize }}{% if group.description %} · {{ group.description|truncatechars:50 }}{% endif %}
+                </div>
+            </div>
+            <a href="{% url 'group_chat' group.id %}" class="join-card-btn">Join</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-mini">No public groups to discover right now.</div>
+    {% endif %}
+</div>
+
+<script>
+document.getElementById('joinModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+});
+</script>
+{% endblock %}

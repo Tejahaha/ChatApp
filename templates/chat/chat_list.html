@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Chats — ChatApp{% endblock %}
+
+{% block extra_css %}
+<style>
+.chats-page { max-width: 680px; margin: 0 auto; padding-bottom: 40px; }
+.chats-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0 20px;
+}
+.chats-title { font-size: 22px; font-weight: 700; color: var(--text1); margin: 0; }
+.new-chat-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 10px;
+    padding: 9px 16px; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: background 150ms, transform 100ms;
+    font-family: inherit;
+}
+.new-chat-btn:hover { background: var(--accent-hover); color: #fff; transform: translateY(-1px); }
+
+.conv-list { display: flex; flex-direction: column; gap: 4px; }
+
+.conv-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 16px; border-radius: 14px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    text-decoration: none; color: inherit;
+    transition: background 140ms, border-color 140ms, box-shadow 140ms;
+}
+.conv-card:hover {
+    background: var(--bg-hover);
+    border-color: var(--border2);
+    box-shadow: var(--shadow-sm);
+    color: inherit;
+}
+
+.conv-avatar-wrap { position: relative; flex-shrink: 0; }
+.conv-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    object-fit: cover;
+}
+.conv-status-dot {
+    position: absolute; bottom: 2px; right: 2px;
+    width: 11px; height: 11px; border-radius: 50%;
+    border: 2px solid var(--bg-elevated);
+}
+.conv-status-dot.online  { background: var(--online); }
+.conv-status-dot.offline { background: var(--text3); }
+
+.conv-body { flex: 1; min-width: 0; }
+.conv-row1 { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+.conv-name { font-size: 14.5px; font-weight: 700; color: var(--text1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+.conv-time { font-size: 11px; color: var(--text3); flex-shrink: 0; }
+.conv-preview {
+    font-size: 13px; color: var(--text2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.conv-unread {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+
+.empty-state {
+    text-align: center; padding: 60px 20px;
+}
+.empty-icon {
+    width: 72px; height: 72px; background: var(--bg-hover);
+    border-radius: 20px; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px; color: var(--text3); font-size: 30px;
+}
+.empty-title { font-size: 17px; font-weight: 700; color: var(--text1); margin-bottom: 8px; }
+.empty-desc { font-size: 14px; color: var(--text2); margin-bottom: 24px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chats-page">
+    <div class="chats-header">
+        <h1 class="chats-title">Messages</h1>
+        <a href="{% url 'search_users' %}" class="new-chat-btn">
+            <i class="bi bi-pencil-square" style="font-size:14px;"></i> New Chat
+        </a>
+    </div>
+
+    {% if chats %}
+    <div class="conv-list">
+        {% for item in chats %}
+        <a href="{% url 'private_chat' item.other_user.id %}" class="conv-card {% if item.unread_count > 0 %}unread{% endif %}">
+            <div class="conv-avatar-wrap">
+                <img src="{{ item.other_user.profile_image.url }}" alt="{{ item.other_user.username }}" class="conv-avatar">
+                <span class="conv-status-dot {% if item.other_user.is_online %}online{% else %}offline{% endif %}"></span>
+            </div>
+            <div class="conv-body">
+                <div class="conv-row1">
+                    <span class="conv-name">{{ item.other_user.username }}</span>
+                    {% if item.last_message %}
+                    <span class="conv-time">{{ item.last_message.created_at|timesince|truncatewords:2 }}</span>
+                    {% endif %}
+                </div>
+                <div class="conv-preview">
+                    {% if item.last_message %}
+                        {% if item.last_message.sender == user %}<span style="color:var(--text3);">You: </span>{% endif %}
+                        {{ item.last_message.message|default:"(attachment)"|truncatechars:60 }}
+                    {% else %}
+                        <span style="color:var(--text3);font-style:italic;">No messages yet</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if item.unread_count > 0 %}
+            <span class="conv-unread">{{ item.unread_count }}</span>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-chat-dots"></i></div>
+        <div class="empty-title">No conversations yet</div>
+        <div class="empty-desc">Find someone to chat with using the Discover page.</div>
+        <a href="{% url 'search_users' %}" class="new-chat-btn" style="display:inline-flex;">
+            <i class="bi bi-search"></i> Find People
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(set PYTHONIOENCODING=utf-8)",
+      "Bash(.venv/Scripts/python.exe manage.py shell -c \"\nfrom chat.models import Room\nrooms = Room.objects.filter\\(creator__isnull=True\\)\nprint\\(f'Rooms with null creator: {rooms.count\\(\\)}'\\)\nfor r in rooms:\n    print\\(f'  - #{r.id}: {r.name}'\\)\n\")",
+      "Bash(.venv/Scripts/python.exe -c \"import pywebpush; print\\('pywebpush ok'\\)\" 2>&1)",
+      "Bash(.venv/Scripts/python.exe -m pip install pywebpush)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations chat)",
+      "Bash(.venv/Scripts/python.exe manage.py migrate)",
+      "Bash(.venv/Scripts/python.exe manage.py check)",
+      "Bash(del:*)",
+      "Bash(.venv/Scripts/python manage.py makemigrations chat --name remove_support_chat)",
+      "Bash(.venv/Scripts/python manage.py migrate)",
+      "Bash(.venv/Scripts/python manage.py makemigrations groups)",
+      "Bash(.venv/Scripts/python manage.py check)",
+      "Bash(.venv/Scripts/python -c \"from django.test.utils import get_runner; from django.conf import settings; print\\('settings OK'\\)\")",
+      "Bash(.venv/Scripts/python manage.py showmigrations)",
+      "Bash(.venv/Scripts/python manage.py check --deploy)"
+    ]
+  }
+}

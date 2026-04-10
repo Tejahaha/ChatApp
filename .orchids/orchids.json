@@ -1,0 +1,7 @@
+{
+  "projectId": "0a4b0f32-4e04-482d-a65e-1700ec2fd1be",
+  "createdAt": 1737696226000,
+  "startupCommands": [
+    "cd C:\\Users\\TEJA\\PycharmProjects\\ChatApp; python manage.py runserver 8001"
+  ]
+}

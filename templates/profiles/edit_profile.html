@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings — ChatApp{% endblock %}
+
+{% block extra_css %}
+<style>
+.settings-wrap { max-width: 620px; margin: 0 auto; padding-bottom: 60px; }
+
+.settings-page-title {
+    font-size: 22px; font-weight: 700; color: var(--text1);
+    padding: 8px 0 24px; margin: 0;
+}
+
+.settings-section {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+.settings-section-head {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+}
+.settings-section-title {
+    font-size: 13.5px; font-weight: 700; color: var(--text1); margin: 0 0 2px;
+}
+.settings-section-desc { font-size: 12px; color: var(--text3); margin: 0; }
+.settings-section-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+.field-group { display: flex; flex-direction: column; gap: 6px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width: 540px) { .field-row { grid-template-columns: 1fr; } }
+
+.field-label {
+    font-size: 11.5px; font-weight: 600; color: var(--text2);
+    text-transform: uppercase; letter-spacing: .5px;
+}
+.field-input,
+.field-textarea,
+.field-file {
+    background: var(--bg-hover); border: 1.5px solid var(--border2);
+    border-radius: 9px; padding: 10px 13px;
+    color: var(--text1); font-size: 14px; outline: none;
+    transition: border-color 150ms, box-shadow 150ms; font-family: inherit;
+    width: 100%;
+}
+.field-textarea { resize: none; }
+.field-input:focus, .field-textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+.field-input::placeholder, .field-textarea::placeholder { color: var(--text3); }
+.field-file { cursor: pointer; padding: 8px 13px; }
+
+/* Avatar preview */
+.avatar-row {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 4px;
+}
+.avatar-preview {
+    width: 72px; height: 72px; border-radius: 50%;
+    object-fit: cover; border: 2px solid var(--border2); flex-shrink: 0;
+}
+.avatar-info { font-size: 12px; color: var(--text3); line-height: 1.5; }
+
+/* Save button */
+.save-row { display: flex; align-items: center; gap: 12px; justify-content: flex-end; }
+.btn-save {
+    padding: 10px 24px; background: var(--accent); color: #fff;
+    font-size: 13.5px; font-weight: 700; border: none; border-radius: 9px;
+    cursor: pointer; transition: background 150ms, transform 100ms; font-family: inherit;
+}
+.btn-save:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+/* Danger */
+.danger-section .settings-section-head { background: rgba(248,81,73,.05); }
+.danger-section .settings-section-title { color: #f85149; }
+.danger-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.danger-text h4 { font-size: 13.5px; font-weight: 600; color: var(--text1); margin: 0 0 3px; }
+.danger-text p  { font-size: 12.5px; color: var(--text2); margin: 0; }
+.btn-danger {
+    padding: 8px 16px; font-size: 13px; font-weight: 600;
+    background: rgba(248,81,73,.12); color: #f85149;
+    border: 1px solid rgba(248,81,73,.28); border-radius: 9px;
+    cursor: pointer; white-space: nowrap; font-family: inherit;
+    text-decoration: none; transition: background 150ms;
+}
+.btn-danger:hover { background: rgba(248,81,73,.22); color: #f85149; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-wrap">
+    <h1 class="settings-page-title">Settings</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Profile section -->
+        <div class="settings-section">
+            <div class="settings-section-head">
+                <div class="settings-section-title">Profile Information</div>
+                <div class="settings-section-desc">Update your display name, bio, and status.</div>
+            </div>
+            <div class="settings-section-body">
+                <div class="field-row">
+                    <div class="field-group">
+                        <label class="field-label">First Name</label>
+                        <input type="text" name="first_name" class="field-input"
+                               value="{{ form.first_name.value|default:'' }}" placeholder="First name" maxlength="150">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Last Name</label>
+                        <input type="text" name="last_name" class="field-input"
+                               value="{{ form.last_name.value|default:'' }}" placeholder="Last name" maxlength="150">
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Status Message</label>
+                    <input type="text" name="status_message" class="field-input"
+                           value="{{ form.status_message.value|default:'' }}"
+                           placeholder="What's on your mind?" maxlength="255">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Bio</label>
+                    <textarea name="bio" class="field-textarea" rows="3"
+                              placeholder="Tell people a little about yourself…" maxlength="500">{{ form.bio.value|default:'' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avatar section -->
+        <div class="settings-section">
+            <div class="settings-section-head">
+                <div class="settings-section-title">Profile Photo</div>
+                <div class="settings-section-desc">Upload a new profile picture.</div>
+            </div>
+            <div class="settings-section-body">
+                <div class="avatar-row">
+                    <img src="{{ user.profile_image.url }}" alt="avatar" class="avatar-preview" id="avatarPreview">
+                    <div class="avatar-info">
+                        Recommended: square image, at least 200×200 px.<br>
+                        JPG, PNG, or GIF supported.
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Upload New Photo</label>
+                    <input type="file" name="profile_image" class="field-file" accept="image/*" id="avatarInput">
+                </div>
+            </div>
+        </div>
+
+        <!-- Save -->
+        <div class="save-row">
+            <a href="{% url 'profile_view' user.username %}" style="font-size:13.5px;color:var(--text3);text-decoration:none;">Cancel</a>
+            <button type="submit" class="btn-save">Save Changes</button>
+        </div>
+    </form>
+
+    <!-- Danger zone -->
+    <div class="settings-section danger-section" style="margin-top:24px;">
+        <div class="settings-section-head">
+            <div class="settings-section-title">Danger Zone</div>
+            <div class="settings-section-desc">Irreversible account actions.</div>
+        </div>
+        <div class="settings-section-body">
+            <div class="danger-row">
+                <div class="danger-text">
+                    <h4>Change Password</h4>
+                    <p>Update your login password.</p>
+                </div>
+                <a href="{% url 'change_password' %}" class="btn-danger">Change Password</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live avatar preview
+document.getElementById('avatarInput').addEventListener('change', function() {
+    if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => document.getElementById('avatarPreview').src = e.target.result;
+        reader.readAsDataURL(this.files[0]);
+    }
+});
+</script>
+{% endblock %}

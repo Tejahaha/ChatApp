@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - ChatApp{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="glass-card p-4">
+            <h4 class="fw-bold mb-4">Your Notifications</h4>
+            
+            <div class="list-group list-group-flush">
+                {% for n in notifications %}
+                <div class="list-group-item d-flex align-items-center border-0 mb-2 rounded-4 p-3 {% if not n.is_read %}bg-light border-start border-4 border-primary{% else %}opacity-75{% endif %}">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3 text-primary">
+                        <i class="bi {% if n.notification_type == 'message' %}bi-chat{% elif n.notification_type == 'friend_request' %}bi-person-plus{% else %}bi-bell{% endif %} fs-4"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <p class="mb-0 fw-medium">{{ n.message }}</p>
+                        <small class="text-muted">{{ n.created_at|timesince }} ago</small>
+                    </div>
+                    {% if not n.is_read %}
+                    <a href="{% url 'mark_as_read' n.id %}" class="btn btn-link btn-sm text-decoration-none">Mark read</a>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="text-center py-5">
+                    <i class="bi bi-bell-slash fs-1 text-muted mb-3 d-block"></i>
+                    <p class="text-muted">You have no notifications yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

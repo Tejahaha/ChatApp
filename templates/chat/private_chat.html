@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ other_user.username }} — ChatApp{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Full-height chat layout under the sticky navbar */
+.chat-page-wrap {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--navbar-h, 64px));
+    max-width: 780px;
+    margin: 0 auto;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    background: var(--bg-chat);
+}
+
+/* ── Header ── */
+.chat-hd {
+    display: flex; align-items: center; gap: 13px;
+    padding: 11px 16px;
+    background: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.back-btn {
+    width: 34px; height: 34px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text2); background: transparent; border: none;
+    cursor: pointer; text-decoration: none; flex-shrink: 0;
+    transition: background 140ms, color 140ms;
+}
+.back-btn:hover { background: var(--bg-hover); color: var(--text1); }
+.chat-hd-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    object-fit: cover; flex-shrink: 0;
+}
+.chat-hd-info { flex: 1; min-width: 0; }
+.chat-hd-name { font-size: 15px; font-weight: 700; color: var(--text1); }
+.chat-hd-status { font-size: 11.5px; color: var(--text3); margin-top: 1px; display: flex; align-items: center; gap: 4px; }
+.chat-hd-status.online { color: var(--online); }
+.status-pulse {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: currentColor; display: inline-block;
+}
+
+/* ── Messages ── */
+.msgs-area {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    padding: 18px 16px 8px;
+    display: flex; flex-direction: column; gap: 2px;
+}
+.msgs-area::-webkit-scrollbar { width: 4px; }
+.msgs-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+.msg-row {
+    display: flex; align-items: flex-end; gap: 0;
+    animation: fadeUp 160ms ease;
+}
+.msg-row.own { justify-content: flex-end; }
+.msg-row + .msg-row { margin-top: 2px; }
+.msg-row.gap-top { margin-top: 12px; }
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg-bubble-wrap { display: flex; flex-direction: column; max-width: 68%; }
+.msg-row.own .msg-bubble-wrap { align-items: flex-end; }
+
+.msg-bubble {
+    padding: 9px 13px 7px;
+    border-radius: 18px;
+    word-break: break-word;
+    font-size: 14px;
+    line-height: 1.55;
+    position: relative;
+}
+.msg-bubble.own {
+    background: linear-gradient(135deg, var(--msg-own-start), var(--msg-own-end));
+    border-radius: 18px 18px 4px 18px;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(74,111,165,0.3);
+}
+.msg-bubble.other {
+    background: var(--msg-other);
+    border-radius: 18px 18px 18px 4px;
+    color: var(--text1);
+    border: 1px solid var(--border);
+}
+.msg-time {
+    font-size: 10px; margin-top: 3px;
+    opacity: 0.65; text-align: right;
+}
+.msg-bubble.own .msg-time  { color: rgba(255,255,255,0.9); }
+.msg-bubble.other .msg-time { color: var(--text3); }
+
+/* ── Typing ── */
+.typing-row {
+    display: none; align-items: center; gap: 8px;
+    padding: 4px 16px 2px;
+}
+.typing-dots {
+    display: flex; align-items: center; gap: 4px;
+    padding: 9px 13px;
+    background: var(--msg-other);
+    border-radius: 18px 18px 18px 4px;
+    border: 1px solid var(--border);
+}
+.typing-dots span {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--text2);
+    animation: tdot 1.2s infinite ease-in-out;
+}
+.typing-dots span:nth-child(2) { animation-delay: .2s; }
+.typing-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes tdot {
+    0%,80%,100% { transform: scale(1); opacity: 0.4; }
+    40% { transform: scale(1.3); opacity: 1; }
+}
+.typing-who { font-size: 11px; color: var(--text3); }
+
+/* ── Input ── */
+.chat-input-zone {
+    padding: 10px 14px 14px;
+    background: var(--bg-sidebar);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.input-pill {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-input);
+    border: 1.5px solid var(--border2);
+    border-radius: 26px;
+    padding: 7px 7px 7px 18px;
+    transition: border-color 150ms, box-shadow 150ms;
+}
+.input-pill:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+.msg-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text1); font-size: 14px; line-height: 1.5;
+    font-family: inherit; min-width: 0;
+}
+.msg-input::placeholder { color: var(--text3); }
+.send-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--accent); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; flex-shrink: 0;
+    transition: background 140ms, transform 100ms, opacity 140ms;
+}
+.send-btn:hover:not(:disabled) { background: var(--accent-hover); transform: scale(1.08); }
+.send-btn:disabled { opacity: 0.28; cursor: not-allowed; transform: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-page-wrap" id="chatWrap">
+    <!-- Header -->
+    <div class="chat-hd">
+        <a href="{% url 'chat_list' %}" class="back-btn" title="Back">
+            <i class="bi bi-arrow-left" style="font-size:17px;"></i>
+        </a>
+        <img src="{{ other_user.profile_image.url }}" alt="{{ other_user.username }}" class="chat-hd-avatar">
+        <div class="chat-hd-info">
+            <div class="chat-hd-name">{{ other_user.username }}</div>
+            <div class="chat-hd-status {% if other_user.is_online %}online{% endif %}" id="statusLine">
+                {% if other_user.is_online %}
+                    <span class="status-pulse"></span> Online
+                {% else %}
+                    Last seen {{ other_user.last_seen|timesince }} ago
+                {% endif %}
+            </div>
+        </div>
+        <a href="{% url 'profile_view' other_user.username %}" class="back-btn ms-1" title="View profile">
+            <i class="bi bi-person-circle" style="font-size:17px;"></i>
+        </a>
+    </div>
+
+    <!-- Messages -->
+    <div class="msgs-area" id="msgsArea">
+        {% for msg in chat_messages %}
+        <div class="msg-row {% if msg.sender == user %}own{% endif %} {% if forloop.first %}gap-top{% endif %}">
+            <div class="msg-bubble-wrap">
+                <div class="msg-bubble {% if msg.sender == user %}own{% else %}other{% endif %}">
+                    {{ msg.message }}
+                    <div class="msg-time">{{ msg.created_at|date:"g:i A" }}</div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="text-align:center;color:var(--text3);font-size:13px;margin:auto;padding:40px 20px;">
+            <i class="bi bi-chat-dots" style="font-size:32px;display:block;margin-bottom:12px;color:var(--text3);opacity:.5;"></i>
+            Say hello to {{ other_user.username }}!
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Typing indicator -->
+    <div class="typing-row" id="typingRow">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+        <span class="typing-who">{{ other_user.username }} is typing…</span>
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input-zone">
+        <form class="input-pill" id="chatForm">
+            <input type="text" id="msgInput" class="msg-input" placeholder="Message {{ other_user.username }}…" autocomplete="off" maxlength="2000">
+            <button type="submit" class="send-btn" id="sendBtn" disabled>
+                <i class="bi bi-send-fill" style="font-size:14px;margin-left:2px;"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    const roomName   = "{{ room_name }}";
+    const myUsername = "{{ user.username }}";
+    const chatId     = "{{ chat.id }}";
+    const senderId   = "{{ user.id }}";
+
+    const msgsArea   = document.getElementById('msgsArea');
+    const msgInput   = document.getElementById('msgInput');
+    const sendBtn    = document.getElementById('sendBtn');
+    const chatForm   = document.getElementById('chatForm');
+    const typingRow  = document.getElementById('typingRow');
+
+    // Adjust height to navbar
+    const navbar = document.querySelector('.navbar');
+    const wrap = document.getElementById('chatWrap');
+    function resize() {
+        const h = navbar ? navbar.offsetHeight : 60;
+        wrap.style.height = `calc(100vh - ${h + 16}px)`;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Scroll to bottom
+    function scrollBottom() { msgsArea.scrollTop = msgsArea.scrollHeight; }
+    scrollBottom();
+
+    // WebSocket
+    const wsProto = location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const ws = new WebSocket(wsProto + location.host + '/ws/chat/' + roomName + '/');
+
+    ws.onopen  = () => {};
+    ws.onerror = () => {};
+    ws.onclose = () => {};
+
+    ws.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+
+        if (data.type === 'typing') {
+            if (data.username !== myUsername) {
+                typingRow.style.display = data.typing ? 'flex' : 'none';
+                scrollBottom();
+            }
+            return;
+        }
+
+        appendMessage(data.message, data.username, data.created_at);
+        typingRow.style.display = 'none';
+        scrollBottom();
+    };
+
+    function appendMessage(text, username, time) {
+        const isOwn = (username === myUsername);
+        const row = document.createElement('div');
+        row.className = 'msg-row gap-top' + (isOwn ? ' own' : '');
+        row.innerHTML = `
+            <div class="msg-bubble-wrap">
+                <div class="msg-bubble ${isOwn ? 'own' : 'other'}">
+                    ${escapeHtml(text)}
+                    <div class="msg-time">${time}</div>
+                </div>
+            </div>`;
+        msgsArea.appendChild(row);
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    // Send
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const msg = msgInput.value.trim();
+        if (!msg || ws.readyState !== WebSocket.OPEN) return;
+        ws.send(JSON.stringify({
+            type: 'message',
+            message: msg,
+            username: myUsername,
+            sender_id: senderId,
+            chat_id: chatId,
+        }));
+        msgInput.value = '';
+        sendBtn.disabled = true;
+        sendTyping(false);
+    });
+
+    // Enable send button
+    msgInput.addEventListener('input', function() {
+        sendBtn.disabled = this.value.trim() === '';
+        sendTyping(this.value.length > 0);
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => sendTyping(false), 2500);
+    });
+
+    let typingTimer;
+    function sendTyping(state) {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'typing', username: myUsername, typing: state }));
+        }
+    }
+})();
+</script>
+{% endblock %}
